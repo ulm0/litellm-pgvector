@@ -1,6 +1,7 @@
 import os
 import asyncio
 import time
+from datetime import datetime
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -108,8 +109,8 @@ async def create_vector_store(
         
         # Convert to response format
         created_at = int(vector_store["created_at_timestamp"])
-        expires_at = int(vector_store["expires_at"].timestamp()) if vector_store.get("expires_at") else None
-        last_active_at = int(vector_store["last_active_at"].timestamp()) if vector_store.get("last_active_at") else None
+        expires_at = int(datetime.fromisoformat(str(vector_store["expires_at"])).timestamp()) if vector_store.get("expires_at") else None
+        last_active_at = int(datetime.fromisoformat(str(vector_store["last_active_at"])).timestamp()) if vector_store.get("last_active_at") else None
         
         return VectorStoreResponse(
             id=vector_store["id"],
@@ -183,8 +184,8 @@ async def list_vector_stores(
         vector_stores = []
         for row in results:
             created_at = int(row["created_at_timestamp"])
-            expires_at = int(row["expires_at"].timestamp()) if row.get("expires_at") else None
-            last_active_at = int(row["last_active_at"].timestamp()) if row.get("last_active_at") else None
+            expires_at = int(datetime.fromisoformat(str(row["expires_at"])).timestamp()) if row.get("expires_at") else None
+            last_active_at = int(datetime.fromisoformat(str(row["last_active_at"])).timestamp()) if row.get("last_active_at") else None
             
             vector_store = VectorStoreResponse(
                 id=row["id"],
