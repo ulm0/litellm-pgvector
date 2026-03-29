@@ -30,7 +30,6 @@ class EmbeddingService:
                 api_key=self.config.api_key,
                 extra_body={"input_type": "search_query", "embedding_types": ["float"]}
             )
-            )
             logging.debug(f"Embedding response: {response}")
             
             # Extract embedding from response
@@ -66,7 +65,6 @@ class EmbeddingService:
                 api_base=self.config.base_url,
                 api_key=self.config.api_key,
                 extra_body={"input_type": "search_document", "embedding_types": ["float"]}
-            )
             )
             
             # Extract embeddings from response
