@@ -24,10 +24,11 @@ class EmbeddingService:
         """
         try:
             response: EmbeddingResponse = await litellm.aembedding(
-                model=f"openai/{self.config.model}",
+                model=self.config.model,
                 input=[text],
                 api_base=self.config.base_url,
-                api_key=self.config.api_key
+                api_key=self.config.api_key,
+                drop_params=True
             )
             logging.debug(f"Embedding response: {response}")
             
@@ -59,10 +60,11 @@ class EmbeddingService:
         try:
             # Generate embeddings using LiteLLM
             response = await litellm.aembedding(
-                model=f"openai/{self.config.model}",
+                model=self.config.model,
                 input=texts,
                 api_base=self.config.base_url,
-                api_key=self.config.api_key
+                api_key=self.config.api_key,
+                drop_params=True
             )
             
             # Extract embeddings from response
