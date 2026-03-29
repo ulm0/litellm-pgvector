@@ -22,8 +22,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
-# Generate Prisma client
-RUN prisma generate
+# Generate Prisma client using default dimensions (overridden at runtime by migrate.py)
+ARG EMBEDDING_DIMENSIONS=1536
+ENV EMBEDDING__DIMENSIONS=${EMBEDDING_DIMENSIONS}
+RUN python migrate.py && prisma generate
 
 # Expose port
 EXPOSE 8000

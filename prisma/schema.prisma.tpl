@@ -37,4 +37,4 @@ model Embedding {
   vector_store    VectorStore @relation(fields: [vector_store_id], references: [id], onDelete: Cascade)
   
   @@map("embeddings")
-} 
+}
