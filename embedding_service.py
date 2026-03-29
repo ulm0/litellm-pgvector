@@ -28,7 +28,7 @@ class EmbeddingService:
                 input=[text],
                 api_base=self.config.base_url,
                 api_key=self.config.api_key,
-                extra_body={"input_type": "search_query"}
+                extra_body={"input_type": "search_query", "embedding_types": ["float"]}
             )
             )
             logging.debug(f"Embedding response: {response}")
@@ -65,7 +65,7 @@ class EmbeddingService:
                 input=texts,
                 api_base=self.config.base_url,
                 api_key=self.config.api_key,
-                extra_body={"input_type": "search_document"}
+                extra_body={"input_type": "search_document", "embedding_types": ["float"]}
             )
             )
             
