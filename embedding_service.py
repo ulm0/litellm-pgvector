@@ -26,6 +26,7 @@ class EmbeddingService:
             response: EmbeddingResponse = await litellm.aembedding(
                 model=self.config.model,
                 input=[text],
+                input_type="search_query",
                 api_base=self.config.base_url,
                 api_key=self.config.api_key,
                 drop_params=True
@@ -62,6 +63,7 @@ class EmbeddingService:
             response = await litellm.aembedding(
                 model=self.config.model,
                 input=texts,
+                input_type="search_document",
                 api_base=self.config.base_url,
                 api_key=self.config.api_key,
                 drop_params=True
