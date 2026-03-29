@@ -218,6 +218,26 @@ async def list_vector_stores(
         raise HTTPException(status_code=500, detail=f"Failed to list vector stores: {str(e)}")
 
 
+@app.delete("/v1/vector_stores/{vector_store_id}")
+async def delete_vector_store(
+    vector_store_id: str,
+    api_key: str = Depends(get_api_key)
+):
+    try:
+        vector_store_table = settings.table_names["vector_stores"]
+        result = await db.query_raw(
+            f"DELETE FROM {vector_store_table} WHERE id = $1 RETURNING id",
+            vector_store_id
+        )
+        if not result:
+            raise HTTPException(status_code=404, detail="Vector store not found")
+        return {"id": vector_store_id, "object": "vector_store.deleted", "deleted": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete vector store: {str(e)}")
+
+
 @app.post("/v1/vector_stores/{vector_store_id}/search", response_model=VectorStoreSearchResponse)
 @app.post("/vector_stores/{vector_store_id}/search", response_model=VectorStoreSearchResponse)
 async def search_vector_store(
