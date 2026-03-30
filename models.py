@@ -84,3 +84,12 @@ class VectorStoreListResponse(BaseModel):
     first_id: Optional[str] = None
     last_id: Optional[str] = None
     has_more: bool = False
+
+
+class EmbeddingDeleteByMetadataRequest(BaseModel):
+    filters: Dict[str, Any]
+
+
+class EmbeddingDeleteByMetadataResponse(BaseModel):
+    deleted: int
+    object: str = "embedding.delete"

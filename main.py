@@ -19,6 +19,8 @@ from models import (
     EmbeddingResponse,
     EmbeddingBatchCreateRequest,
     EmbeddingBatchCreateResponse,
+    EmbeddingDeleteByMetadataRequest,
+    EmbeddingDeleteByMetadataResponse,
     VectorStoreListResponse,
     ContentChunk
 )
@@ -530,6 +532,80 @@ async def create_embeddings_batch(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to create embeddings batch: {str(e)}")
+
+
+@app.delete("/v1/vector_stores/{vector_store_id}/embeddings", response_model=EmbeddingDeleteByMetadataResponse)
+async def delete_embeddings_by_metadata(
+    vector_store_id: str,
+    request: EmbeddingDeleteByMetadataRequest,
+    api_key: str = Depends(get_api_key)
+):
+    """
+    Delete embeddings from a vector store filtered by metadata key/value pairs.
+    """
+    try:
+        vector_store_table = settings.table_names["vector_stores"]
+        vector_store_result = await db.query_raw(
+            f"SELECT id FROM {vector_store_table} WHERE id = $1",
+            vector_store_id
+        )
+        if not vector_store_result:
+            raise HTTPException(status_code=404, detail="Vector store not found")
+
+        if not request.filters:
+            raise HTTPException(status_code=400, detail="At least one filter is required")
+
+        fields = settings.db_fields
+        table_name = settings.table_names["embeddings"]
+
+        param_count = 1
+        params: list = [vector_store_id]
+        conditions = [f"{fields.vector_store_id_field} = ${param_count}"]
+        param_count += 1
+
+        for key, value in request.filters.items():
+            conditions.append(f"{fields.metadata_field}->>${param_count} = ${param_count + 1}")
+            params.extend([key, str(value)])
+            param_count += 2
+
+        where_clause = " AND ".join(conditions)
+
+        result = await db.query_raw(
+            f"DELETE FROM {table_name} WHERE {where_clause} RETURNING {fields.id_field}",
+            *params
+        )
+
+        deleted_count = len(result) if result else 0
+
+        if deleted_count > 0:
+            await db.query_raw(
+                f"""
+                UPDATE {vector_store_table}
+                SET
+                    file_counts = jsonb_set(
+                        jsonb_set(
+                            COALESCE(file_counts, '{{"in_progress": 0, "completed": 0, "failed": 0, "cancelled": 0, "total": 0}}'::jsonb),
+                            '{{completed}}',
+                            (GREATEST(COALESCE(file_counts->>'completed', '0')::int - $2, 0))::text::jsonb
+                        ),
+                        '{{total}}',
+                        (GREATEST(COALESCE(file_counts->>'total', '0')::int - $2, 0))::text::jsonb
+                    ),
+                    last_active_at = NOW()
+                WHERE id = $1
+                """,
+                vector_store_id,
+                deleted_count
+            )
+
+        return EmbeddingDeleteByMetadataResponse(deleted=deleted_count)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to delete embeddings: {str(e)}")
 
 
 @app.get("/health")
